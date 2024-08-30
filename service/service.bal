@@ -9,6 +9,20 @@ service /reservations on new http:Listener(9090) {
         // Complete the implementation to check whether a room is available for the given dates
         // Use getAvailableRoom function to check whether a room is available
         // And create a new reservation if room is available
+        Room|() availableRoom = check getAvailableRoom(payload.checkinDate, payload.checkoutDate, payload.roomType);
+        if (availableRoom is ()) {
+            return {body: "No rooms available for the given dates"};
+        }
+        Reservation reservation = {
+            id: roomReservations.length() + 1,
+            checkinDate: payload.checkinDate,
+            checkoutDate: payload.checkoutDate,
+            room: availableRoom,
+            user: payload.user
+        };
+        roomReservations.add(reservation);
+        sendNotificationForReservation(reservation, "Confirmed");
+        return reservation;
     }
 
     resource function put [int reservationId](UpdateReservationRequest payload) returns Reservation|UpdateReservationError|error {
